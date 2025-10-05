@@ -1,5 +1,5 @@
 const { ROLE_BOSS, ROLE_CALLER } = require('../config');
-const { getUser, addCloseToUser } = require('../database/callers');
+const { getUser, removeCloseFromUser } = require('../database/callers');
 const { makeProgressBar, getLevelName, getNextLevelMin } = require('../utils/progressBar');
 
 module.exports = {
@@ -17,15 +17,14 @@ module.exports = {
       return message.reply(`:x: La personne mentionnée doit avoir le rôle **${ROLE_CALLER}**.`);
 
     // Retirer une close
-    const user = getUser(mention.id);
-    if (!user || user.closes === 0)
+    const success = removeCloseFromUser(mention.id);
+    if (!success)
       return message.reply(`:x: ${mention.tag} n'a aucune close à retirer.`);
 
-    // Mise à jour
-    const newCloses = user.closes - 1;
-    const newXp = user.xp - 1 >= 0 ? user.xp - 1 : 0;
-    require('../database/callers').db.prepare('UPDATE callers SET closes = ?, xp = ? WHERE user_id = ?')
-      .run(newCloses, newXp, mention.id);
+    // Récupérer les données mises à jour
+    const user = getUser(mention.id);
+    const newCloses = user.closes;
+    const newXp = user.xp;
 
     // Barre de progression
     const level = getLevelName(newCloses);

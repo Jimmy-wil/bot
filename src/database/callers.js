@@ -24,5 +24,16 @@ function getTop(limit = 10) {
   return db.prepare('SELECT * FROM callers ORDER BY closes DESC LIMIT ?').all(limit);
 }
 
+// Retire une close à un utilisateur
+function removeCloseFromUser(userId) {
+  const user = getUser(userId);
+  if (!user || user.closes === 0) return false;
+  
+  const newCloses = user.closes - 1;
+  const newXp = user.xp - 1 >= 0 ? user.xp - 1 : 0;
+  db.prepare('UPDATE callers SET closes = ?, xp = ? WHERE user_id = ?').run(newCloses, newXp, userId);
+  return true;
+}
+
 // Exports
-module.exports = { getUser, addCloseToUser, getTop };
+module.exports = { getUser, addCloseToUser, getTop, removeCloseFromUser };
